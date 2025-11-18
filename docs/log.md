@@ -4,4 +4,6 @@
 |------------|------------------|-----------|
 | 11/11/2025 | Project setup, React dummy pages | 2         |
 | 11/14/2025 | Design documentation | 2         |
-| **Total**  |                  | **4**     |
+| 11/14/2025 | HuggingFace sentiment/emotion analysis | 1         |
+| 11/17/2025 | Emotion to color mapping | 1         |
+| **Total**  |                  | **6**     |
