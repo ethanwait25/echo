@@ -1,17 +1,12 @@
 import express from "express";
+import api from "./api/index.js";
 
-console.log("Server starting up...")
+console.log("Server starting up...");
 
 const app = express();
 const port = 3000;
 
-app.get('/', (req, res) => {
-    res.send("Welcome to echo.");
-});
-
-app.get('/hello', (req, res) => {
-    res.send("Hello World!");
-})
+app.use('/api', api);
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
