@@ -39,6 +39,20 @@ ON entry
 FOR DELETE
 USING (user_id = auth.uid());
 
+CREATE Policy "Users can see entries from their groups"
+ON entry
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1
+    FROM entry_group eg
+    JOIN user_group ug
+      ON eg.grp_id = ug.grp_id
+    WHERE eg.entry_id = entry.entry_id
+      AND ug.user_id = auth.uid()
+  )
+);
+
 
 -- Paragraph policies
 ALTER TABLE paragraph ENABLE ROW LEVEL SECURITY;
