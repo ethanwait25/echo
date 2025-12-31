@@ -113,3 +113,32 @@ USING (
       AND e.user_id = auth.uid()
   )
 );
+
+
+-- Bucket policies
+CREATE POLICY "Users can upload to their folder"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'attachments'
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can read from their folder"
+ON storage.objects
+FOR SELECT
+TO authenticated
+USING (
+  bucket_id = 'attachments'
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete from their folder"
+ON storage.objects
+FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'attachments'
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);

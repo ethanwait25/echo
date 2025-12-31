@@ -1,13 +1,11 @@
-import './App.css'
-import LoginView from './components/LoginView'
+import { Toaster } from "@/components/ui/sonner"
+import { AppShell } from "@/components/AppShell"
 
-function App() {
-
+export default function App() {
   return (
     <>
-      <LoginView />
+      <AppShell />
+      <Toaster richColors />
     </>
   )
 }
-
-export default App

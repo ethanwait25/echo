@@ -21,8 +21,8 @@ CREATE TABLE "entry" (
     "title"      VARCHAR(255),
     "full_text"  TEXT NOT NULL,
     "word_count" INTEGER NOT NULL,
-    "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
-    "updated_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
+    "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE "paragraph" (
@@ -37,31 +37,34 @@ CREATE TABLE "embedding" (
     "owner_type" VARCHAR(50) NOT NULL
                     CHECK ("owner_type" IN ('entry', 'paragraph', 'caption')),
     "owner_id"   BIGINT NOT NULL,
-    "model_name" VARCHAR(50) NOT NULL,
     "dim"        INTEGER NOT NULL,
     "vector"     vector NOT NULL
 );
 
 CREATE TABLE "entry_sentiment" (
-    "entry_id"        BIGINT PRIMARY KEY
+    "entry_id"      BIGINT PRIMARY KEY
                         REFERENCES "entry"("entry_id") ON DELETE CASCADE,
-    "sentiment_score" DOUBLE PRECISION NOT NULL,
-    "emotion"         VARCHAR(50) NOT NULL
-                        CHECK ("emotion" IN ('anger', 'disgust', 'fear', 
-                        'joy', 'neutral', 'sadness', 'surprise')),
-    "model_name"      VARCHAR(50) NOT NULL,
-    "analyzed_at"     TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
+    "anger"         DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "disgust"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "fear"          DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "joy"           DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "neutral"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "sadness"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "surprise"      DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "analyzed_at"   TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE "paragraph_sentiment" (
-    "pg_id"           BIGINT PRIMARY KEY
+    "pg_id"         BIGINT PRIMARY KEY
                         REFERENCES "paragraph"("pg_id") ON DELETE CASCADE,
-    "sentiment_score" DOUBLE PRECISION NOT NULL,
-    "emotion"         VARCHAR(50) NOT NULL
-                        CHECK ("emotion" IN ('anger', 'disgust', 'fear', 
-                        'joy', 'neutral', 'sadness', 'surprise')),
-    "model_name"      VARCHAR(50) NOT NULL,
-    "analyzed_at"     TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
+    "anger"         DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "disgust"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "fear"          DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "joy"           DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "neutral"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "sadness"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "surprise"      DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "analyzed_at"   TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE "tag" (
@@ -80,7 +83,8 @@ CREATE TABLE "attachment" (
     "att_id"        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     "entry_id"      BIGINT NOT NULL REFERENCES "entry"("entry_id") ON DELETE CASCADE,
     "caption_id"    BIGINT NOT NULL REFERENCES "caption"("caption_id") ON DELETE CASCADE,
-    "file_path"     VARCHAR(255) NOT NULL,
+    "file_name"     VARCHAR(255) NOT NULL,
+    "storage_path"  VARCHAR(255) NOT NULL,
     "file_type"     VARCHAR(255) NOT NULL
                         CHECK ("file_type" IN ('image', 'audio', 'document'))
 );
