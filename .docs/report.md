@@ -4,6 +4,8 @@
 
 It's all coming back to you.
 
+[View Progress Log](./log.md)
+
 ## Summary
 
 For my project, I wanted to explore the exciting possibilities of vector databases and find a fun way to include some machine learning functionality. I created a reflecting journaling application whose express purpose is making experience recall as simple as possible. I wanted a journal that made it easy to use old experiences to inform future decisions.
