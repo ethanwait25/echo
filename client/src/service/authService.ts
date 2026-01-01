@@ -1,32 +1,55 @@
 import { supabase } from "./supabaseClient";
 
-async function register(email: string, password: string) {
+export type RegisterPayload = {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    displayName: string;
+};
+
+export async function register(payload: RegisterPayload) {
+    const { email, password, firstName, lastName, displayName } = payload;
+
     const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password
+        email,
+        password
     });
 
     if (error) {
-        console.error(`Error registering user: ${error}`);
+        console.error(`Error registering user: ${error.message}`);
+        throw error;
+    }
+
+    const userId = data.user?.id;
+
+    if (userId) {
+        const profileError = await insertProfile(userId, firstName, lastName, displayName);
+
+        if (profileError) {
+            console.error(`Error inserting user profile: ${profileError.message}`);
+            throw profileError;
+        }
     }
 
     return data;
 }
 
-async function login(email: string, password: string) {
+export async function login(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+        email,
+        password
     });
 
     if (error) {
         console.error(`Error logging in user: ${error}`);
+        throw error;
     }
 
     return data;
 }
 
-async function logout() {
+export async function logout() {
     const { error } = await supabase.auth.signOut();
     if (error) {
         console.error(`Error logging out user: ${error}`);
@@ -39,6 +62,8 @@ async function insertProfile(
     lastName: string,
     displayName: string
 ) {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
+
     const { error } = await supabase
         .from("profile")
         .insert({
@@ -46,21 +71,19 @@ async function insertProfile(
             first_name: firstName,
             last_name: lastName,
             display_name: displayName,
-            timezone: "ABC123"
+            timezone
         });
 
-    if (error) {
-        console.error(`Error inserting user profile: ${error}`);
-    }
+    return error;
 }
 
-async function getProfile() {
+export async function getProfile() {
     const { data, error } = await supabase
         .from("profile")
         .select();
     
     if (error) {
-        console.error(`Error fetching user profile: ${error}`)
+        console.error(`Error fetching user profile: ${error}`);
     }
 
     return data;

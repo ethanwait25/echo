@@ -32,7 +32,7 @@ type ResponseBody = {
 const openai = new OpenAI();
 
 async function generateEmbeddings(
-  input: string | string[],
+  input: string | string[]
 ): Promise<number[] | number[][] | null> {
   try {
     const response = await openai.embeddings.create({
@@ -53,15 +53,19 @@ async function generateEmbeddings(
   }
 }
 
+const corsHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers":
+    "authorization, x-client-info, apikey, content-type",
+  "access-control-allow-methods": "POST, OPTIONS",
+};
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
+      ...corsHeaders,
       "content-type": "application/json",
-      "access-control-allow-origin": "*",
-      "access-control-allow-headers":
-        "authorization, x-client-info, apikey, content-type",
-      "access-control-allow-methods": "POST, OPTIONS",
     },
   });
 }
@@ -71,7 +75,9 @@ function isStringArray(x: unknown): x is string[] {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { status: 204 });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
   if (req.method !== "POST") return jsonResponse({ error: "Use POST" }, 405);
 
   try {
@@ -127,7 +133,7 @@ serve(async (req) => {
   } catch (err) {
     return jsonResponse(
       { error: err instanceof Error ? err.message : String(err) },
-      500,
+      500
     );
   }
 });

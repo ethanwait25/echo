@@ -111,3 +111,26 @@ CREATE TABLE "entry_group" (
                     REFERENCES "group"("grp_id") ON DELETE CASCADE,
     PRIMARY KEY ("entry_id", "grp_id")
 );
+
+create or replace function public.get_closest_embeddings(
+  query_embedding vector(1536),
+  match_count int default 25
+)
+returns table (
+  emb_id bigint,
+  owner_id bigint,
+  owner_type varchar(50),
+  similarity double precision
+)
+language sql
+stable
+as $$
+  select
+    e.emb_id,
+    e.owner_id,
+    e.owner_type,
+    1 - (e.vector <=> query_embedding) as similarity
+  from embedding e
+  order by e.vector <=> query_embedding
+  limit match_count;
+$$;

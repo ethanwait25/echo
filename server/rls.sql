@@ -7,6 +7,11 @@ ON profile
 FOR SELECT
 USING (user_id = auth.uid());
 
+CREATE POLICY "Users can insert their profile"
+ON profile
+FOR INSERT
+WITH CHECK (user_id = auth.uid());
+
 CREATE POLICY "Users can update their profile"
 ON profile
 FOR SELECT
