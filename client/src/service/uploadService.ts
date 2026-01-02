@@ -46,6 +46,19 @@ async function getAttachments(entryId: number) {
   return data;
 }
 
+export async function getAttachmentById(attId: number) {
+  const { data, error } = await supabase
+    .from("attachment")
+    .select()
+    .eq("att_id", attId);
+
+  if (error) {
+    console.error(`Error retrieving attachment by ID: ${error}`);
+  }
+
+  return data;
+}
+
 async function deleteAttachment(attId: number) {
   const { error } = await supabase
     .from("attachment")
@@ -75,7 +88,7 @@ export async function uploadFile(entryId: number, file: File, userId: string) {
   return data?.path;
 }
 
-async function retrieveFileUrl(path: string) {
+export async function retrieveFileUrl(path: string) {
   const { data, error } = await supabase.storage
     .from("attachments")
     .createSignedUrl(path, 60);
@@ -84,7 +97,7 @@ async function retrieveFileUrl(path: string) {
     console.error(`Error retrieving file URL from bucket: ${error}`);
   }
 
-  return data?.signedUrl;
+  return data!.signedUrl;
 }
 
 async function deleteFile(path: string) {

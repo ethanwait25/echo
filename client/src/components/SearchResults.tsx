@@ -7,12 +7,14 @@ import {
   OwnerType,
 } from "@/service/analyzeService";
 import { getEntryById, getParagraphById } from "@/service/entryService";
+import { getAttachmentById, retrieveFileUrl } from "@/service/uploadService";
+import { FileText, Volume2 } from "lucide-react";
 
 type SearchDisplayItem =
   | {
       kind: "entry";
       id: number;
-      date: string; // ISO date
+      date: string;
       title?: string;
       text: string;
     }
@@ -20,6 +22,15 @@ type SearchDisplayItem =
       kind: "paragraph";
       id: number;
       text: string;
+    }
+  | {
+      kind: "attachment";
+      id: number;
+      text: string;
+      path: string;
+      src: string;
+      name: string;
+      type: string;
     };
 
 function formatEntryDate(isoDate: string) {
@@ -31,18 +42,51 @@ function formatEntryDate(isoDate: string) {
   });
 }
 
-type ResultFilter = "both" | "entries" | "paragraphs";
+type ResultFilter = "all" | "entries" | "paragraphs" | "attachments";
 
 function nextFilter(f: ResultFilter): ResultFilter {
-  if (f === "both") return "entries";
+  if (f === "all") return "entries";
   if (f === "entries") return "paragraphs";
-  return "both";
+  if (f === "paragraphs") return "attachments";
+  return "all";
 }
 
 function filterLabel(f: ResultFilter) {
-  if (f === "both") return "Both";
+  if (f === "all") return "All";
   if (f === "entries") return "Entries";
-  return "Paragraphs";
+  if (f === "paragraphs") return "Paragraphs";
+  return "Attachments";
+}
+
+function AttachmentTile({ type }: { type: "document" | "audio" }) {
+  const Icon = type === "document" ? FileText : Volume2;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className="
+        mt-2 relative
+        flex h-32 w-32 items-center justify-center
+        rounded-lg border border-dashed
+        bg-background
+        bg-muted/100
+        text-muted-foreground
+
+        cursor-pointer select-none
+        transition
+
+        hover:bg-muted/50 hover:border-muted-foreground/40 hover:text-foreground
+        active:scale-[0.98]
+
+        focus-visible:outline-none
+        focus-visible:ring-2 focus-visible:ring-ring
+        focus-visible:ring-offset-2 focus-visible:ring-offset-background
+      "
+    >
+      <Icon className="h-10 w-10" />
+    </div>
+  );
 }
 
 export function SearchResults({
@@ -58,7 +102,7 @@ export function SearchResults({
   const [results, setResults] = useState<SearchDisplayItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [filter, setFilter] = useState<ResultFilter>("both");
+  const [filter, setFilter] = useState<ResultFilter>("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +144,24 @@ export function SearchResults({
               } satisfies SearchDisplayItem;
             }
 
+            if (e.owner_type === OwnerType.Caption) {
+              const res = await getAttachmentById(e.owner_id);
+              const att = Array.isArray(res) ? res[0] : res;
+              if (!att) return null;
+
+              const fileUrl = await retrieveFileUrl(att.storage_path);
+
+              return {
+                kind: "attachment",
+                id: att.att_id,
+                text: att.caption ?? "",
+                path: att.storage_path,
+                src: fileUrl,
+                name: att.file_name,
+                type: att.file_type,
+              } satisfies SearchDisplayItem;
+            }
+
             return null;
           })
         );
@@ -119,14 +181,18 @@ export function SearchResults({
   }, [query]);
 
   const filteredResults = useMemo(() => {
-    if (filter === "both") return results;
+    if (filter === "all") return results;
     if (filter === "entries") return results.filter((r) => r.kind === "entry");
-    return results.filter((r) => r.kind === "paragraph");
+    if (filter === "paragraphs")
+      return results.filter((r) => r.kind === "paragraph");
+    return results.filter((r) => r.kind === "attachment");
   }, [results, filter]);
 
   return (
-    <Card className={`min-h-0 overflow-hidden p-4 ${className ?? ""}`}>
-      <div className="mb-3 flex items-center justify-between">
+    <Card
+      className={`min-h-0 overflow-hidden p-4 flex flex-col ${className ?? ""}`}
+    >
+      <div className="mb-3 flex shrink-0 items-center justify-between">
         <div>
           <div className="text-sm text-muted-foreground">Search</div>
           <div className="text-lg font-semibold">{query}</div>
@@ -155,38 +221,69 @@ export function SearchResults({
       {error && <div className="text-sm text-red-600">{error}</div>}
 
       {!loading && !error && (
-        <div className="space-y-2">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {filteredResults.length === 0 ? (
             <div className="text-sm text-muted-foreground">No results.</div>
           ) : (
-            filteredResults.map((r) => (
-              <div key={`${r.kind}-${r.id}`} className="rounded-lg border p-3">
-                {r.kind === "paragraph" ? (
-                  <>
-                    <div className="text-xs font-medium text-muted-foreground">
-                      Paragraph
-                    </div>
-                    <div className="mt-1 whitespace-pre-wrap text-sm">
-                      {r.text}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-baseline justify-between gap-3">
-                      <div className="text-sm font-semibold">
-                        {r.title ?? "Untitled"}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {filteredResults.map((r) => (
+                <div
+                  key={`${r.kind}-${r.id}`}
+                  className="
+                    aspect-square overflow-hidden
+                    rounded-xl border bg-background p-3
+                    transition hover:bg-muted/40
+                  "
+                >
+                  {r.kind === "paragraph" ? (
+                    <>
+                      <div className="text-xs font-medium text-muted-foreground">
+                        Paragraph
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatEntryDate(r.date)}
+                      <div className="mt-1 whitespace-pre-wrap text-sm">
+                        {r.text}
                       </div>
-                    </div>
-                    <div className="mt-2 line-clamp-4 whitespace-pre-wrap text-sm text-foreground/90">
-                      {r.text}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))
+                    </>
+                  ) : r.kind === "attachment" ? (
+                    <>
+                      <div className="text-xs font-medium text-muted-foreground">
+                        Attachment
+                      </div>
+
+                      <div className="text-sm font-semibold">{r.name}</div>
+
+                      {r.type === "image" ? (
+                        <img
+                          src={r.src}
+                          className="mt-1 max-h-64 max-w-full rounded-md object-contain"
+                          alt=""
+                        />
+                      ) : r.type === "document" || r.type === "audio" ? (
+                        <AttachmentTile type={r.type} />
+                      ) : null}
+
+                      <div className="mt-1 whitespace-pre-wrap text-sm">
+                        {r.text}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <div className="text-sm font-semibold">
+                          {r.title ?? "Untitled"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatEntryDate(r.date)}
+                        </div>
+                      </div>
+                      <div className="mt-2 line-clamp-4 whitespace-pre-wrap text-sm text-foreground/90">
+                        {r.text}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
