@@ -167,7 +167,7 @@ async function updateParagraphByIndex(
   }
 }
 
-async function insertTags(entryId: number, tags: string[]) {
+export async function insertTags(entryId: number, tags: string[]) {
   const rows = tags.map((name) => ({
     entry_id: entryId,
     name: name,

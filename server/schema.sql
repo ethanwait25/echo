@@ -74,15 +74,10 @@ CREATE TABLE "tag" (
     CONSTRAINT "tag_entry_name_unique" UNIQUE ("entry_id", "name")
 );
 
-CREATE TABLE "caption" (
-    "caption_id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    "text"       TEXT NOT NULL
-);
-
 CREATE TABLE "attachment" (
     "att_id"        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     "entry_id"      BIGINT NOT NULL REFERENCES "entry"("entry_id") ON DELETE CASCADE,
-    "caption_id"    BIGINT NOT NULL REFERENCES "caption"("caption_id") ON DELETE CASCADE,
+    "caption"       TEXT NULL,
     "file_name"     VARCHAR(255) NOT NULL,
     "storage_path"  VARCHAR(255) NOT NULL,
     "file_type"     VARCHAR(255) NOT NULL
