@@ -205,11 +205,12 @@ export function SearchResults({
             onClick={() => setFilter((f) => nextFilter(f))}
             disabled={loading || !!error || results.length === 0}
             title="Filter results"
+            className="cursor-pointer"
           >
             Show: {filterLabel(filter)}
           </Button>
 
-          <Button variant="ghost" onClick={onBack}>
+          <Button variant="ghost" className="cursor-pointer" onClick={onBack}>
             Back
           </Button>
         </div>
